@@ -113,29 +113,42 @@ class MainTests(unittest.TestCase):
     def test_book_detail_logged_out(self):
         """Test that the book appears on its detail page."""
         # TODO: Use helper functions to create books, authors, user
-
+        create_books()
+        create_author()
+        create_user()
         # TODO: Make a GET request to the URL /book/1, check to see that the
         # status code is 200
-
+        response = self.app.get('/book/1', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
         # TODO: Check that the response contains the book's title, publish date,
         # and author's name
-
+        response_text = response.get_data(as_text=True)
+        self.assertIn('To Kill a Mockingbird', response_text)
+        self.assertIn('1960, 7, 11', response_text)
+        self.assertIn('Harper Lee', response_text)
+        
         # TODO: Check that the response does NOT contain the 'Favorite' button
         # (it should only be shown to logged in users)
-        pass
+        self.assertNotIn('Favorite this book', response_text)
 
     def test_book_detail_logged_in(self):
         """Test that the book appears on its detail page."""
         # TODO: Use helper functions to create books, authors, user, & to log in
-
+        create_books()
+        create_user()
+        login(self.app, 'me1', 'password')
         # TODO: Make a GET request to the URL /book/1, check to see that the
         # status code is 200
-
+        response = self.app.get('/book/1', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
         # TODO: Check that the response contains the book's title, publish date,
         # and author's name
-
+        response_text = response.get_data(as_text=True)
+        self.assertIn('To Kill a Mockingbird', response_text)
+        self.assertIn('1960, 7, 11', response_text)
+        self.assertIn('Harper Lee', response_text)
         # TODO: Check that the response contains the 'Favorite' button
-        pass
+        self.assertIn('Favorite this book', response_text)
 
     def test_update_book(self):
         """Test updating a book."""
@@ -201,28 +214,52 @@ class MainTests(unittest.TestCase):
     def test_create_author(self):
         """Test creating an author."""
         # TODO: Make a POST request to the /create_author route
-
+        # Make POST request with data
+        post_data = {
+            'name': 'Jason',
+            'biography': 'bio'
+        }
+        self.app.post('/create_author', data=post_data)
         # TODO: Verify that the author was updated in the database
-        pass
+        created_author = Author.query.filter_by(title='Jason').one()
+        self.assertIsNotNone(created_author)
+        self.assertEqual(created_author.name, 'Jason')
+        
 
     def test_create_genre(self):
         # TODO: Make a POST request to the /create_genre route, 
-
+        post_data = {
+            'name': 'Fiction'
+        }
+        self.app.post('/create_genre', data=post_data)
         # TODO: Verify that the genre was updated in the database
-        pass
+        created_genre = Genre.query.filter_by(title='Fiction').one()
+        self.assertIsNotNone(created_genre)
+        self.assertEqual(created_genre.name, 'Fiction')
+        
 
     def test_profile_page(self):
         # TODO: Make a GET request to the /profile/1 route
+        response = self.app.get('/create_book')
 
+        self.app.post('/profile/1', data=post_data)
         # TODO: Verify that the response shows the appropriate user info
         pass
 
     def test_favorite_book(self):
         # TODO: Login as the user me1
-
+        # Set up
+        create_books()
+        create_user()
+        login(self.app, 'me1', 'password')
         # TODO: Make a POST request to the /favorite/1 route
-
+        post_data = {
+            'book': created_book()
+        }
+        self.app.post('/favorite/1', data=post_data)
         # TODO: Verify that the book with id 1 was added to the user's favorites
+        fav_book = Book.query.filter_by(id='1').one()
+        self.assertIsNotNone(fav_book)
         pass
 
     def test_unfavorite_book(self):
